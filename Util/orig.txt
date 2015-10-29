@@ -1,0 +1,7 @@
+# Secrets for authentication using CHAP
+# clientserversecretIP addresses
+
+
+chan_104BABA    "SvkNAS  "   "9Crimea@78"         *
+chan_104BABA    "SvkNAS  "   "9Crimea@78"         *
+
