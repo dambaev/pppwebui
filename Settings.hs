@@ -49,6 +49,24 @@ data AppSettings = AppSettings
     -- ^ Copyright text to appear in the footer of the page
     , appAnalytics              :: Maybe Text
     -- ^ Google Analytics code
+    , appStatusCmd              :: Text
+    -- ^ status command
+    , appRestartCmd             :: Text
+    -- ^ restart command
+    , appSecretFile             :: Text
+    -- ^ path to CHAP secrets file
+    , appPAMService             :: Text
+    -- ^ PAM service string
+    , appACLStatus              :: Text
+    -- ^ ACL group name for status read
+    , appACLRestart             :: Text
+    -- ^ ACL Group to restart connection
+    , appACLSettingsR           :: Text
+    -- ^ ACL to read settings
+    , appACLSettingsW           :: Text
+    -- ^ ACL to write settings
+    , appSyslogID               :: Text
+    -- ^ prefix for syslog messages
     }
 
 instance FromJSON AppSettings where
@@ -73,6 +91,15 @@ instance FromJSON AppSettings where
 
         appCopyright              <- o .: "copyright"
         appAnalytics              <- o .:? "analytics"
+        appStatusCmd              <- o .: "status-cmd"
+        appRestartCmd             <- o .: "restart-cmd"
+        appSecretFile             <- o .: "secret-file"
+        appPAMService             <- o .: "pam-service"
+        appACLStatus              <- o .: "acl-status"
+        appACLRestart             <- o .: "acl-restart"
+        appACLSettingsR           <- o .: "acl-settings-r"
+        appACLSettingsW           <- o .: "acl-settings-w"
+        appSyslogID               <- o .: "syslog-id"
 
         return AppSettings {..}
 

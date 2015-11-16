@@ -2,8 +2,9 @@
 
 <h1> Текущее состояние соединения
 <p>
-    $maybe status <- mstatus
-        #{status}
+    $maybe lines<- mstatus
+        $forall line <- lines
+            <p> #{line}
     $nothing
         Ошибка запроса состояния
 

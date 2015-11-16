@@ -6,6 +6,14 @@ import Text.Jasmine                (minifym)
 import Yesod.Core.Types            (Logger)
 import Yesod.Default.Util          (addStaticContentExternal)
 import qualified Yesod.Core.Unsafe as Unsafe
+import Yesod.Auth
+import Util.AAA
+import Handler.AuthPAM
+import Data.List as DL (any)
+import System.Posix.Syslog as SPS
+import Data.Text as T
+import Data.Text.Encoding as E
+import Network.Wai (remoteHost)
 
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -68,8 +76,21 @@ instance Yesod App where
     -- Routes not requiring authenitcation.
     isAuthorized FaviconR _ = return Authorized
     isAuthorized RobotsR _ = return Authorized
+    isAuthorized (AuthR _) _ = return Authorized
+    isAuthorized ExitR _ = return Authorized
     -- Default to Authorized for now.
-    isAuthorized _ _ = return Authorized
+    isAuthorized route method = do
+        muserid <- maybeAuthId
+        case muserid of
+            Nothing-> do
+                liftIO $ print route
+                return $ AuthenticationRequired
+            Just userid -> do
+                app <- getYesod >>= return . appSettings
+                egroup <- liftIO $ getUserGroups userid 
+                case egroup of
+                    Left _ -> return $ Unauthorized "Не удалось получить список Ваших прав"
+                    Right groups -> checkAuthorization route method userid app groups
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -98,6 +119,7 @@ instance Yesod App where
             || level == LevelError
 
     makeLogger = return . appLogger
+    authRoute _ = Just $ AuthR LoginR
 
 -- This instance is required to use forms. You can modify renderMessage to
 -- achieve customized and internationalized form validation messages.
@@ -114,3 +136,67 @@ unsafeHandler = Unsafe.fakeHandlerGetLogger appLogger
 -- https://github.com/yesodweb/yesod/wiki/Sending-email
 -- https://github.com/yesodweb/yesod/wiki/Serve-static-files-from-a-separate-domain
 -- https://github.com/yesodweb/yesod/wiki/i18n-messages-in-the-scaffolding
+
+instance YesodAuth App where
+    type AuthId App = Text
+
+
+    getAuthId = return . Just . credsIdent
+
+    loginDest _ = StatusR
+    logoutDest _ = StatusR
+
+
+    authPlugins _ = [authPAM]
+    authHttpManager = appHttpManager
+
+    maybeAuthId = lookupSession "_ID"
+
+
+authPAM:: AuthPlugin App
+authPAM = AuthPlugin "pam" dispatch authPAMGetLoginR
+    where
+    dispatch method urls = do
+        app <- lift $ getYesod >>= return . appSettings
+        authPAMDispatch (appPAMService app) method urls
+-- check connection status
+checkAuthorization StatusR _ user app groups | DL.any (==(appACLStatus app)) groups = do
+    syslogMsg $ user `T.append` ": read status"
+    return Authorized
+-- restart connection
+checkAuthorization RestartR True user app groups | DL.any (==(appACLRestart app)) groups = do
+    syslogMsg $ user `T.append` ": restart connection"
+    return Authorized
+-- view settings
+checkAuthorization SettingsR False user app groups | DL.any (==(appACLSettingsR app)) groups = do
+    syslogMsg $ user `T.append` ": read settings"
+    return Authorized
+-- change settings
+checkAuthorization SettingsR True user app groups | DL.any (==(appACLSettingsW app)) groups = do
+    syslogMsg $ user `T.append` ": set settings"
+    return Authorized
+checkAuthorization route method user _ _ = do
+    syslogMsg $ user `T.append` ": access denied to " `T.append` (T.pack $ show route) `T.append` ", write: " 
+        `T.append` (T.pack $ show method)
+    return $ Unauthorized "У Вас недостаточно прав. Обратитесь к администратору"
+
+
+syslogMsg:: Text-> Handler ()
+syslogMsg msg = do
+    app <- getYesod >>= return . appSettings
+    ip <- getClientIP
+    liftIO $ SPS.withSyslog (T.unpack $ appSyslogID app) [PID] AUTH [Notice] 
+        $ SPS.syslog Notice (T.unpack $ "[" `T.append` ip `T.append` "]: " `T.append` msg)
+    return ()
+
+getClientIP:: Handler Text
+getClientIP = do
+    mrealip <- lookupHeader "X-Real-IP" >>= \x-> case x of
+        Nothing -> return "nothing"
+        Just ip -> return $ E.decodeUtf8 ip
+    mforwarderFor <- lookupHeader "X-Forwarder-For" >>= \x-> case x of
+        Nothing -> return "nothing"
+        Just ip -> return $ E.decodeUtf8 ip
+    host <- remoteHost <$> waiRequest
+    return $ (mrealip) `T.append` "->" `T.append` mforwarderFor `T.append` "->" 
+        `T.append` (T.pack$ show host)

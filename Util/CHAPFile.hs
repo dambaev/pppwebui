@@ -114,5 +114,5 @@ identToBSC = awaitForever $ \CHAPIdent {..} -> do
     
 quoteOnSpace:: Text-> Text
 quoteOnSpace value | T.any isSpace value = "\"" `T.append` value `T.append` "\""
-quoteOnSpace value | T.any (not . isPrint) value = "\"" `T.append` value `T.append` "\""
+quoteOnSpace value | T.any (not . isAlphaNum) value = "\"" `T.append` value `T.append` "\""
 quoteOnSpace value = value

@@ -2,7 +2,7 @@
 # See https://github.com/yesodweb/yesod/wiki/Configuration#overriding-configuration-values-with-environment-variables
 
 static-dir:     "_env:STATIC_DIR:static"
-host:           "_env:HOST:*4" # any IPv4 host
+host:           "_env:HOST:127.0.0.1" # any IPv4 host
 port:           "_env:PORT:3000"
 approot:        "_env:APPROOT:"
 ip-from-header: "_env:IP_FROM_HEADER:false"
@@ -20,13 +20,14 @@ ip-from-header: "_env:IP_FROM_HEADER:false"
 copyright: dambaev alexander, theice@inbox.ru (c) 2015 
 #analytics: UA-YOURCODE
 
-status-cmd: ./status
-restart-cmd: ./restart
-secret-file: ./secret.txt
+status-cmd: /opt/pppwebui/bin/status
+restart-cmd: /opt/pppwebui/bin/restart
+secret-file: /etc/ppp/chap-secrets
 pam-service: other
 acl-status: acl_pppwebui_status
 acl-restart: acl_pppwebui_restart
 acl-settings-r: acl_pppwebui_settings_r
 acl-settings-w: acl_pppwebui_settings_w
 syslog-id: pppwebui
+
 

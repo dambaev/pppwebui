@@ -1,0 +1,8 @@
+Package: pppwebui
+Version: 1.0.0
+Architecture: i386
+Maintainer: Dambaev Alexander, theice@inbox.ru
+Section: other
+Description: Web interface for changing CHAP-secret for PPP for use in VyOS
+ This package containes Web interface for changing CHAP-secret for using in VyOS
+

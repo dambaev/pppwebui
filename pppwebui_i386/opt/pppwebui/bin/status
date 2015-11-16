@@ -1,0 +1,13 @@
+#!/bin/vbash
+
+source /opt/vyatta/etc/functions/script-template
+
+run show interface wirelessmodem wlm0
+echo
+echo "isp check log:"
+tail -10l /var/log/isp_check.log
+
+echo
+echo "syslog log:"
+cat /var/log/messages | grep pppd | tail -20l
+

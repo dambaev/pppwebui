@@ -17,17 +17,18 @@ getStatusR = do
     userid <- requireAuthId
     app <- getYesod >>= return . appSettings
     mstatus <- liftIO $! getConnectionStatus $ appStatusCmd app
+    
     let menuW = $(widgetFile "menu")
     defaultLayout $! do
         $(widgetFile "status")
 
-getConnectionStatus:: Text-> IO (Maybe Text)
+getConnectionStatus:: Text-> IO (Maybe [Text])
 getConnectionStatus cmd = do
     (code, out, err) <- readProcessWithExitCode (T.unpack cmd) [] "" 
     case code of
         ExitSuccess -> do
             case Import.length out of
-                _ -> return $! Just $! T.pack out
+                _ -> return $! Just $! T.lines $! T.pack out
         _ -> return Nothing
 
 
