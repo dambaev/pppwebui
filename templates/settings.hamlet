@@ -1,0 +1,10 @@
+^{menuW}
+<h1> Изменение параметров подключения
+<p>
+    Параметры аутентификации
+    <form action=@{SettingsR} method=post enctype=#{enctype}>
+        ^{widget}
+        <button> Применить
+
+<p>
+    <a href=@{StatusR}> На главную 

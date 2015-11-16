@@ -1,0 +1,10 @@
+<table id=menuI>
+    <tr>
+        <tr>
+            <a href=@{StatusR}> Проверить статус подключения
+        <tr>
+            <a href=@{SettingsR}> Изменить параметры подключения
+        <tr>
+            <a href=@{ExitR}>
+                Выход
+

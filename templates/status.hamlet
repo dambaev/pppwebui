@@ -1,0 +1,17 @@
+^{menuW}
+
+<h1> Текущее состояние соединения
+<p>
+    $maybe status <- mstatus
+        #{status}
+    $nothing
+        Ошибка запроса состояния
+
+<p>
+    <form method=post action=@{RestartR}>
+        <button>
+            Перезапустить подключение
+
+<p>
+<p>
+    <a href=@{StatusR}> На главную
